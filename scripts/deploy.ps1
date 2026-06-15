@@ -8,6 +8,7 @@ param(
     [string]$ServiceName = "discordbot",
     [string]$JarPath = "build\libs\DiscordBot-1.0.0-all.jar",
     [string]$DiscordToken = $env:DISCORD_TOKEN,
+    [string]$YoutubeRefreshToken = $env:YOUTUBE_REFRESH_TOKEN,
     [switch]$SkipBuild
 )
 
@@ -51,7 +52,11 @@ WantedBy=multi-user.target
 
     if ($DiscordToken) {
         $envFile = New-TemporaryFile
-        Set-Content -LiteralPath $envFile -Value "DISCORD_TOKEN=$DiscordToken" -Encoding ASCII -NoNewline
+        $envContent = "DISCORD_TOKEN=$DiscordToken`n"
+        if ($YoutubeRefreshToken) {
+            $envContent += "YOUTUBE_REFRESH_TOKEN=$YoutubeRefreshToken`n"
+        }
+        Set-Content -LiteralPath $envFile -Value $envContent -Encoding ASCII -NoNewline
     }
 
     foreach ($hostName in $Hosts) {

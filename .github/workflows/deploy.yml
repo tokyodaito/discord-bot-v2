@@ -16,6 +16,7 @@ jobs:
       DISCORD_BOT_SSH_USER: ${{ secrets.DISCORD_BOT_SSH_USER }}
       DISCORD_BOT_SSH_PORT: ${{ secrets.DISCORD_BOT_SSH_PORT }}
       DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+      YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
 
     steps:
       - name: Checkout

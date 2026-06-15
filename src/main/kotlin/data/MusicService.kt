@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
@@ -12,6 +13,13 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer
 import dev.lavalink.youtube.YoutubeAudioSourceManager
+import dev.lavalink.youtube.clients.AndroidVr
+import dev.lavalink.youtube.clients.MWeb
+import dev.lavalink.youtube.clients.Music
+import dev.lavalink.youtube.clients.Tv
+import dev.lavalink.youtube.clients.TvHtml5Simply
+import dev.lavalink.youtube.clients.Web
+import dev.lavalink.youtube.clients.WebEmbedded
 import discord4j.common.util.Snowflake
 import discord4j.voice.AudioProvider
 import reactor.core.publisher.Mono
@@ -21,24 +29,12 @@ import java.util.Queue
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
-/**
- * Глобальный сервис музыки: один AudioPlayerManager на всё приложение
- * и по одному GuildMusicManager на каждый сервер.
- */
 class MusicService {
 
     private val playerManager: AudioPlayerManager = DefaultAudioPlayerManager().apply {
-        // Оптимизация буфера для Discord4J
         configuration.setFrameBufferFactory(::NonAllocatingAudioFrameBuffer)
-
-        // Локальные источники опциональны, можешь убрать эту строчку, если не планируешь файловую систему
         AudioSourceManagers.registerLocalSource(this)
-
-        // Регистрируем youtube-source вместо встроенного youtube Lavaplayer
-        val yt = YoutubeAudioSourceManager()
-        registerSourceManager(yt)
-        // ВАЖНО: НЕ вызываем AudioSourceManagers.registerRemoteSources(this),
-        // чтобы не подмешивать старый YoutubeAudioSourceManager
+        registerSourceManager(createYoutubeSource())
     }
 
     private val musicManagers = ConcurrentHashMap<Snowflake, GuildMusicManager>()
@@ -46,13 +42,6 @@ class MusicService {
     fun getOrCreateForGuild(guildId: Snowflake): GuildMusicManager =
         musicManagers.computeIfAbsent(guildId) { GuildMusicManager(playerManager) }
 
-    /**
-     * Загружает трек (YouTube URL/ytsearch и т.п.), ставит его в очередь/проигрывание
-     * и возвращает Mono, который завершится:
-     *  - с AudioTrack при успехе
-     *  - пустым Mono, если ничего не найдено
-     *  - с ошибкой при loadFailed.
-     */
     fun loadAndPlay(guildId: Snowflake, identifier: String): Mono<AudioTrack> {
         val manager = getOrCreateForGuild(guildId)
 
@@ -69,12 +58,12 @@ class MusicService {
                         manager.scheduler.play(firstTrack)
                         sink.success(firstTrack)
                     } else {
-                        sink.success() // пустой результат
+                        sink.success()
                     }
                 }
 
                 override fun noMatches() {
-                    sink.success() // пустой результат
+                    sink.success()
                 }
 
                 override fun loadFailed(exception: FriendlyException) {
@@ -83,11 +72,33 @@ class MusicService {
             })
         }
     }
+
+    private fun createYoutubeSource(): YoutubeAudioSourceManager {
+        val source = YoutubeAudioSourceManager(
+            MWeb(),
+            Web(),
+            Music(),
+            WebEmbedded(),
+            AndroidVr(),
+            Tv(),
+            TvHtml5Simply(),
+        )
+
+        val refreshToken = System.getenv("YOUTUBE_REFRESH_TOKEN")
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+
+        if (refreshToken != null) {
+            source.useOauth2(refreshToken, true)
+            println("YouTube OAuth enabled with refresh token.")
+        } else {
+            println("YOUTUBE_REFRESH_TOKEN is not set; age-restricted/login-required YouTube videos may fail.")
+        }
+
+        return source
+    }
 }
 
-/**
- * Набор объектов аудио для одного guild: player + очередь + AudioProvider.
- */
 class GuildMusicManager(playerManager: AudioPlayerManager) {
 
     val player: AudioPlayer = playerManager.createPlayer()
@@ -99,17 +110,13 @@ class GuildMusicManager(playerManager: AudioPlayerManager) {
     }
 }
 
-/**
- * Очередь треков + автопереключение на следующий.
- */
 class AudioTrackScheduler(
     private val player: AudioPlayer
-) : com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter() {
+) : AudioEventAdapter() {
 
     private val queue: Queue<AudioTrack> = ConcurrentLinkedQueue()
 
     fun play(track: AudioTrack, force: Boolean = false): Boolean {
-        // startTrack(track, true) — играть только если сейчас ничего не играет
         val playing = player.startTrack(track, !force)
         if (!playing) {
             queue.offer(track)
@@ -130,9 +137,6 @@ class AudioTrackScheduler(
     }
 }
 
-/**
- * Мост между Lavaplayer и Discord4J: отдаёт opus-фреймы в голос.
- */
 class LavaPlayerAudioProvider(
     private val player: AudioPlayer
 ) : AudioProvider(

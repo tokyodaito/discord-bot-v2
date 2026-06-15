@@ -36,7 +36,12 @@ for raw_host in "${host_list[@]}"; do
     "mv '$APP_DIR/bot.jar.tmp' '$APP_DIR/bot.jar'; chown '$APP_USER:$APP_USER' '$APP_DIR/bot.jar'; chmod 0644 '$APP_DIR/bot.jar'"
 
   if [[ -n "${DISCORD_TOKEN:-}" ]]; then
-    printf 'DISCORD_TOKEN=%s\n' "$DISCORD_TOKEN" | ssh "${ssh_opts[@]}" "$target" \
+    {
+      printf 'DISCORD_TOKEN=%s\n' "$DISCORD_TOKEN"
+      if [[ -n "${YOUTUBE_REFRESH_TOKEN:-}" ]]; then
+        printf 'YOUTUBE_REFRESH_TOKEN=%s\n' "$YOUTUBE_REFRESH_TOKEN"
+      fi
+    } | ssh "${ssh_opts[@]}" "$target" \
       "umask 077; cat > '$APP_DIR/runtime.env.tmp'; chown '$APP_USER:$APP_USER' '$APP_DIR/runtime.env.tmp'; mv '$APP_DIR/runtime.env.tmp' '$APP_DIR/runtime.env'"
   else
     ssh "${ssh_opts[@]}" "$target" \

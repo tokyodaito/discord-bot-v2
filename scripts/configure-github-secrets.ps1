@@ -3,7 +3,8 @@ param(
     [string]$SshUser = "root",
     [string]$SshPort = "22",
     [string]$KeyPath = "$env:USERPROFILE\.ssh\neuroslim\deploy_ed25519",
-    [string]$DiscordToken = $env:DISCORD_TOKEN
+    [string]$DiscordToken = $env:DISCORD_TOKEN,
+    [string]$YoutubeRefreshToken = $env:YOUTUBE_REFRESH_TOKEN
 )
 
 $ErrorActionPreference = "Stop"
@@ -30,6 +31,19 @@ if ($DiscordToken) {
     }
 } else {
     Write-Warning "DISCORD_TOKEN is not set. Set it later with: gh secret set DISCORD_TOKEN"
+}
+
+if ($YoutubeRefreshToken) {
+    $youtubeTokenFile = New-TemporaryFile
+    try {
+        Set-Content -LiteralPath $youtubeTokenFile -Value $YoutubeRefreshToken -Encoding ASCII -NoNewline
+        & gh secret set YOUTUBE_REFRESH_TOKEN --body-file $youtubeTokenFile
+    }
+    finally {
+        Remove-Item -LiteralPath $youtubeTokenFile -Force -ErrorAction SilentlyContinue
+    }
+} else {
+    Write-Warning "YOUTUBE_REFRESH_TOKEN is not set. Login-required YouTube videos may fail."
 }
 
 Write-Host "GitHub deploy secrets are configured."
