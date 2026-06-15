@@ -1,0 +1,57 @@
+name: Build and deploy
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      DISCORD_BOT_HOSTS: ${{ secrets.DISCORD_BOT_HOSTS }}
+      DISCORD_BOT_SSH_USER: ${{ secrets.DISCORD_BOT_SSH_USER }}
+      DISCORD_BOT_SSH_PORT: ${{ secrets.DISCORD_BOT_SSH_PORT }}
+      DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.DISCORD_BOT_SSH_KEY }}
+        run: |
+          test -n "$SSH_PRIVATE_KEY"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          hosts="${DISCORD_BOT_HOSTS:-147.182.178.32}"
+          port="${DISCORD_BOT_SSH_PORT:-22}"
+          IFS=',' read -ra host_list <<< "$hosts"
+          for host in "${host_list[@]}"; do
+            host="$(echo "$host" | xargs)"
+            [ -n "$host" ] || continue
+            ssh-keyscan -p "$port" "$host" >> ~/.ssh/known_hosts
+          done
+
+      - name: Deploy
+        run: bash scripts/deploy.sh

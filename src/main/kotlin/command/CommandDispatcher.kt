@@ -2,6 +2,7 @@ package org.bogsnebes.discordbot.command
 
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import org.bogsnebes.discordbot.data.DataLayer
+import org.bogsnebes.discordbot.data.MusicService
 import reactor.core.publisher.Mono
 
 /**
@@ -9,7 +10,8 @@ import reactor.core.publisher.Mono
  */
 class CommandDispatcher(
     private val executor: CommandExecutor,
-    private val dataLayer: DataLayer
+    private val dataLayer: DataLayer,
+    private val musicService: MusicService
 ) {
 
     private val commands: Map<String, BotCommand> = buildCommands()
@@ -17,6 +19,7 @@ class CommandDispatcher(
     private fun buildCommands(): Map<String, BotCommand> {
         val list = listOf(
             PingCommand(),
+            PlayCommand(musicService),
             // сюда потом добавишь музыкальные команды
         )
         return list.associateBy { it.name }
@@ -32,7 +35,8 @@ class CommandDispatcher(
 
         val context = CommandContext(
             event = event,
-            data = dataLayer
+            data = dataLayer,
+            music = musicService,
         )
 
         return executor.run(command, context)

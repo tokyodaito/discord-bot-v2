@@ -2,11 +2,13 @@ package org.bogsnebes.discordbot.command
 
 import org.bogsnebes.discordbot.data.DataLayer
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
+import org.bogsnebes.discordbot.data.MusicService
 import reactor.core.publisher.Mono
 
 data class CommandContext(
     val event: ChatInputInteractionEvent,
     val data: DataLayer,
+    val music: MusicService,
 ) {
     fun reply(content: String, ephemeral: Boolean = false): Mono<Void> {
         return if (ephemeral) {

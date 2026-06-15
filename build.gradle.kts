@@ -16,9 +16,10 @@ repositories {
 
 dependencies {
     implementation("com.discord4j:discord4j-core:3.3.0") // reactive, на Reactor
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.2.2")
 
     implementation("dev.arbjerg:lavaplayer:2.2.4")        // основной плеер
-    implementation("dev.lavalink.youtube:v2:1.16.0")      // YouTube source
+    implementation("dev.lavalink.youtube:v2:1.18.1")      // YouTube source
 
     implementation("ch.qos.logback:logback-classic:1.5.21")
 }
@@ -36,7 +37,7 @@ tasks.test {
 }
 
 tasks.withType<ShadowJar> {
-    archiveClassifier.set("")
+    archiveClassifier.set("all")
     mergeServiceFiles()
     manifest {
         attributes["Main-Class"] = application.mainClass.get()
