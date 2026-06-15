@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.discord4j:discord4j-core:3.3.0") // reactive, на Reactor
+    implementation("com.discord4j:discord4j-core:3.3.2") // reactive, на Reactor
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.2.2")
 
     implementation("dev.arbjerg:lavaplayer:2.2.4")        // основной плеер
