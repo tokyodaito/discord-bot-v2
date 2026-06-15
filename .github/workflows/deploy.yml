@@ -36,10 +36,20 @@ jobs:
           ./gradlew clean build
 
       - name: Configure SSH
+        id: ssh
         env:
           SSH_PRIVATE_KEY: ${{ secrets.DISCORD_BOT_SSH_KEY }}
         run: |
-          test -n "$SSH_PRIVATE_KEY"
+          if [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "::warning::DISCORD_BOT_SSH_KEY is not configured; skipping deploy."
+            echo "skip_deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "$DISCORD_TOKEN" ]; then
+            echo "::warning::DISCORD_TOKEN is not configured; skipping deploy."
+            echo "skip_deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
@@ -54,4 +64,5 @@ jobs:
           done
 
       - name: Deploy
+        if: steps.ssh.outputs.skip_deploy != 'true'
         run: bash scripts/deploy.sh
