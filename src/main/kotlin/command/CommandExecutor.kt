@@ -69,7 +69,7 @@ class CommandExecutor {
             .concatMap { invocation -> // строго по очереди
                 invocation.command.execute(invocation.context)
             }
-            .onErrorContinue { error, _ ->
+            .onErrorContinue { error: Throwable, _: Any? ->
                 error.printStackTrace()
             }
             .doFinally {

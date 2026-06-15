@@ -20,6 +20,7 @@ dependencies {
 
     implementation("dev.arbjerg:lavaplayer:2.2.4")        // основной плеер
     implementation("dev.lavalink.youtube:v2:1.18.1")      // YouTube source
+    runtimeOnly("moe.kyokobot.libdave:natives-linux-x86-64:0.1.3")
 
     implementation("ch.qos.logback:logback-classic:1.5.21")
 }
