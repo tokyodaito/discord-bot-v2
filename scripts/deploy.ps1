@@ -9,6 +9,7 @@ param(
     [string]$JarPath = "build\libs\DiscordBot-1.0.0-all.jar",
     [string]$DiscordToken = $env:DISCORD_TOKEN,
     [string]$YoutubeRefreshToken = $env:YOUTUBE_REFRESH_TOKEN,
+    [string]$YoutubeOauthInit = $env:YOUTUBE_OAUTH_INIT,
     [switch]$SkipBuild
 )
 
@@ -55,6 +56,9 @@ WantedBy=multi-user.target
         $envContent = "DISCORD_TOKEN=$DiscordToken`n"
         if ($YoutubeRefreshToken) {
             $envContent += "YOUTUBE_REFRESH_TOKEN=$YoutubeRefreshToken`n"
+        }
+        if ($YoutubeOauthInit) {
+            $envContent += "YOUTUBE_OAUTH_INIT=$YoutubeOauthInit`n"
         }
         Set-Content -LiteralPath $envFile -Value $envContent -Encoding ASCII -NoNewline
     }

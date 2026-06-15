@@ -41,6 +41,9 @@ for raw_host in "${host_list[@]}"; do
       if [[ -n "${YOUTUBE_REFRESH_TOKEN:-}" ]]; then
         printf 'YOUTUBE_REFRESH_TOKEN=%s\n' "$YOUTUBE_REFRESH_TOKEN"
       fi
+      if [[ -n "${YOUTUBE_OAUTH_INIT:-}" ]]; then
+        printf 'YOUTUBE_OAUTH_INIT=%s\n' "$YOUTUBE_OAUTH_INIT"
+      fi
     } | ssh "${ssh_opts[@]}" "$target" \
       "umask 077; cat > '$APP_DIR/runtime.env.tmp'; chown '$APP_USER:$APP_USER' '$APP_DIR/runtime.env.tmp'; mv '$APP_DIR/runtime.env.tmp' '$APP_DIR/runtime.env'"
   else

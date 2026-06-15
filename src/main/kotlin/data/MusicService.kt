@@ -91,6 +91,9 @@ class MusicService {
         if (refreshToken != null) {
             source.useOauth2(refreshToken, true)
             println("YouTube OAuth enabled with refresh token.")
+        } else if (System.getenv("YOUTUBE_OAUTH_INIT").equals("true", ignoreCase = true)) {
+            source.useOauth2(null, false)
+            println("YouTube OAuth initialization enabled. Follow the device flow in the logs, then save the printed refresh token.")
         } else {
             println("YOUTUBE_REFRESH_TOKEN is not set; age-restricted/login-required YouTube videos may fail.")
         }
