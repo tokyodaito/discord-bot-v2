@@ -4,7 +4,8 @@ param(
     [string]$SshPort = "22",
     [string]$KeyPath = "$env:USERPROFILE\.ssh\neuroslim\deploy_ed25519",
     [string]$DiscordToken = $env:DISCORD_TOKEN,
-    [string]$YoutubeRefreshToken = $env:YOUTUBE_REFRESH_TOKEN
+    [string]$YoutubeRefreshToken = $env:YOUTUBE_REFRESH_TOKEN,
+    [string]$VkAccessToken = $env:VK_ACCESS_TOKEN
 )
 
 $ErrorActionPreference = "Stop"
@@ -44,6 +45,19 @@ if ($YoutubeRefreshToken) {
     }
 } else {
     Write-Warning "YOUTUBE_REFRESH_TOKEN is not set. Login-required YouTube videos may fail."
+}
+
+if ($VkAccessToken) {
+    $vkTokenFile = New-TemporaryFile
+    try {
+        Set-Content -LiteralPath $vkTokenFile -Value $VkAccessToken -Encoding ASCII -NoNewline
+        & gh secret set VK_ACCESS_TOKEN --body-file $vkTokenFile
+    }
+    finally {
+        Remove-Item -LiteralPath $vkTokenFile -Force -ErrorAction SilentlyContinue
+    }
+} else {
+    Write-Warning "VK_ACCESS_TOKEN is not set. VK playback will be disabled until configured."
 }
 
 Write-Host "GitHub deploy secrets are configured."

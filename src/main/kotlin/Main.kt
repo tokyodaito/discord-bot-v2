@@ -41,11 +41,11 @@ fun main() {
             .build(),
         ApplicationCommandRequest.builder()
             .name("play")
-            .description("Воспроизвести музыку с YouTube")
+            .description("Воспроизвести музыку с YouTube или VK")
             .addOption(
                 ApplicationCommandOptionData.builder()
                     .name("url")
-                    .description("Ссылка или поисковый запрос YouTube")
+                    .description("YouTube/VK ссылка, YouTube запрос или vksearch:artist track")
                     .type(ApplicationCommandOption.Type.STRING.value)
                     .required(true)
                     .build()

@@ -22,6 +22,7 @@ dependencies {
     implementation("dev.lavalink.youtube:v2:1.18.1")      // YouTube source
     runtimeOnly("moe.kyokobot.libdave:natives-linux-x86-64:0.1.3")
 
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.4")
     implementation("ch.qos.logback:logback-classic:1.5.21")
 }
 

@@ -10,6 +10,7 @@ param(
     [string]$DiscordToken = $env:DISCORD_TOKEN,
     [string]$YoutubeRefreshToken = $env:YOUTUBE_REFRESH_TOKEN,
     [string]$YoutubeOauthInit = $env:YOUTUBE_OAUTH_INIT,
+    [string]$VkAccessToken = $env:VK_ACCESS_TOKEN,
     [switch]$SkipBuild
 )
 
@@ -59,6 +60,9 @@ WantedBy=multi-user.target
         }
         if ($YoutubeOauthInit) {
             $envContent += "YOUTUBE_OAUTH_INIT=$YoutubeOauthInit`n"
+        }
+        if ($VkAccessToken) {
+            $envContent += "VK_ACCESS_TOKEN=$VkAccessToken`n"
         }
         Set-Content -LiteralPath $envFile -Value $envContent -Encoding ASCII -NoNewline
     }
